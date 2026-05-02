@@ -116,13 +116,29 @@ body {
 .topnav {
   display: inline-flex;
   align-items: center;
-  gap: 22px;
+  gap: 14px;
 }
 
 .topnav a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   text-decoration: none;
   color: var(--text);
-  font-weight: 600;
+  font-weight: 800;
+  font-size: 1.05rem;
+  padding: 14px 22px;
+  border-radius: 999px;
+  background: rgba(24, 35, 53, 0.9);
+  border: 1px solid var(--border);
+  box-shadow: none;
+  transition: transform 140ms ease, box-shadow 140ms ease, opacity 140ms ease, background 140ms ease;
+}
+
+.topnav a:hover {
+  transform: translateY(-1px);
+  background: rgba(34, 49, 72, 0.96);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
 }
 
 .cart-pill,
