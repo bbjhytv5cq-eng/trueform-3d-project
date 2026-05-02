@@ -9,6 +9,7 @@ const ordersDir = path.join(root, 'orders');
 const catalogPath = path.join(root, 'catalog.json');
 const envPath = path.join(root, '.env');
 const port = Number(process.env.PORT || 8000);
+const host = process.env.HOST || '0.0.0.0';
 
 loadEnvFile(envPath);
 fs.mkdirSync(ordersDir, { recursive: true });
@@ -92,8 +93,8 @@ http.createServer(async (req, res) => {
   }
 
   return sendJson(res, 404, { error: 'Not found.' });
-}).listen(port, () => {
-  console.log(`Trueform 3D recovered app running at http://localhost:${port}`);
+}).listen(port, host, () => {
+  console.log(`Trueform 3D recovered app running on ${host}:${port}`);
 });
 
 function sendFile(res, filePath, headOnly = false) {
