@@ -231,7 +231,10 @@ function createMailer() {
     host,
     port: Number(process.env.SMTP_PORT || 587),
     secure: String(process.env.SMTP_SECURE || 'false') === 'true',
-    auth: { user, pass }
+    auth: { user, pass },
+    connectionTimeout: 5000,
+    greetingTimeout: 5000,
+    socketTimeout: 5000
   });
 }
 
