@@ -56,7 +56,19 @@ http.createServer(async (req, res) => {
 
       fs.writeFileSync(path.join(ordersDir, `${orderId}.json`), JSON.stringify(record, null, 2));
 
-      const emailResult = await sendOrderEmails(record);
+      let emailResult;
+      try {
+        emailResult = await sendOrderEmails(record);
+      } catch (emailError) {
+        console.error('Order email failed:', emailError);
+        emailResult = {
+          enabled: true,
+          adminSent: false,
+          customerSent: false,
+          customerConfirmationEnabled: false,
+          error: emailError?.message || 'Email sending failed.'
+        };
+      }
 
       return sendJson(res, 200, {
         ok: true,
