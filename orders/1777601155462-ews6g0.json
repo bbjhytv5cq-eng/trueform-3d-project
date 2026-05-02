@@ -1,0 +1,23 @@
+{
+  "orderId": "1777601155462-ews6g0",
+  "savedAt": "2026-05-01T02:05:55.459Z",
+  "source": "local-recovered-app",
+  "cart": [
+    {
+      "itemId": "0918",
+      "name": "Skull Clicker",
+      "quantity": 1,
+      "price": 5,
+      "color": "Black",
+      "secondColor": "",
+      "lineTotal": 5
+    }
+  ],
+  "customerName": "Tyler Gady",
+  "customerEmail": "tylercgady@gmail.com",
+  "phone": "8605192251",
+  "address": "81 Pilgrim Road",
+  "notes": "",
+  "total": 5,
+  "kind": "cart-checkout"
+}

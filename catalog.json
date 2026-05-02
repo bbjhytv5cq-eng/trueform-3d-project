@@ -1,0 +1,35 @@
+{
+  "catalogTitle": "Trueform 3D",
+  "tagline": "Precision In Every Layer",
+  "contact": {
+    "email": "tylercgady@gmail.com",
+    "phone": "+1-555-123-4567"
+  },
+  "orderingInstructions": [
+    "Text the item number and quantity",
+    "Approve the photo proof we send back",
+    "Pick up locally or receive 3-day shipping"
+  ],
+  "items": [
+    { "id": "0909", "name": "Tic Tac Gun (not dangerous)", "description": "", "price": 15, "image": "./items/0909.png" },
+    { "id": "0911", "name": "Flexible Dragon", "description": "", "price": 12, "image": "./items/0911.png" },
+    { "id": "0916", "name": "Full Hand Clicker", "description": "", "price": 6, "image": "./items/0916.jpeg" },
+    { "id": "0918", "name": "Skull Clicker", "description": "", "price": 5, "image": "./items/0918.jpeg" },
+    { "id": "0922", "name": "Spiral Star", "description": "", "price": 7, "image": "./items/0922.jpeg", "video": "./items/0922.mov" },
+    { "id": "0925", "name": "Spiral Square", "description": "", "price": 5, "image": "./items/0925.jpeg", "video": "./items/0925.mov" },
+    { "id": "0930", "name": "Pass Through Cone", "description": "", "price": 5, "image": "./items/0930.jpeg" },
+    { "id": "0932", "name": "Oreo Clicker", "description": "", "price": 6, "image": "./items/0932.jpeg" },
+    { "id": "0933", "name": "Expanding Ball", "description": "", "price": 5, "image": "./items/0933.jpeg" },
+    { "id": "0934", "name": "Infinity Cube", "description": "", "price": 4, "image": "./items/0934.jpeg" },
+    { "id": "0936", "name": "Airless Clicker", "description": "", "price": 4, "image": "./items/0936.jpeg" },
+    { "id": "0937", "name": "Butterfly Knife (not dangerous)", "description": "", "price": 8, "image": "./items/0937.jpeg" },
+    { "id": "0938", "name": "Pass Through 50 Cal", "description": "", "price": 6, "image": "./items/0938.jpeg" },
+    { "id": "0939", "name": "Spiral Cube", "description": "", "price": 5, "image": "./items/0939.jpeg" },
+    { "id": "0940", "name": "Single Clicker", "description": "", "price": 3, "image": "./items/0940.jpeg" },
+    { "id": "0941", "name": "Quad Row Clicker", "description": "", "price": 6, "image": "./items/0941.jpeg" },
+    { "id": "0942", "name": "WASD Clicker", "description": "", "price": 6, "image": "./items/0942.jpeg" },
+    { "id": "1001", "name": "Double Clicker", "description": "", "price": 4, "image": "./items/1001.jpeg" },
+    { "id": "1011", "name": "Morf Worm", "description": "", "price": 6, "image": "./items/1011.mov", "video": "./items/1011.mov" },
+    { "id": "1017", "name": "Spiral Soccer Octogon", "description": "", "price": 5, "image": "./items/1017.mov", "video": "./items/1017.mov", "noColor": true }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "orderId": "1777688158061-1xfcfu",
+  "savedAt": "2026-05-02T02:15:58.061Z",
+  "source": "local-recovered-app",
+  "cart": [
+    {
+      "itemId": "0909",
+      "name": "Tic Tac Gun (not dangerous)",
+      "quantity": 1,
+      "price": 15,
+      "color": "Black",
+      "secondColor": "Black",
+      "lineTotal": 15
+    }
+  ],
+  "customerName": "Email Test",
+  "customerEmail": "test@example.com",
+  "phone": "555-123-4567",
+  "address": "123 Test St, Testville, NY 10001",
+  "notes": "Testing email delivery",
+  "total": 15,
+  "kind": "cart-checkout"
+}

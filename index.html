@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trueform 3D</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="site-bg"></div>
+    <div class="shell">
+      <header class="topbar">
+        <a class="brand" href="#top">
+          <img class="brand-mark brand-logo" src="./items/apple-touch-icon-navy-1024.png" alt="Trueform 3D logo" />
+          <span class="brand-copy">
+            <strong>Trueform 3D</strong>
+            <span>Precision In Every Layer</span>
+          </span>
+        </a>
+
+        <nav class="topnav" aria-label="Primary">
+          <a href="#featured">Featured</a>
+          <a href="#collections">Shop</a>
+          <a href="#about">About</a>
+        </nav>
+
+        <button type="button" id="open-cart-button" class="cart-pill" onclick="window.__openCart && window.__openCart()">Cart</button>
+      </header>
+
+      <main id="top">
+        <section class="hero-grid">
+          <div class="hero-copy hero-panel">
+            <p class="section-kicker">Precision In Every Layer</p>
+            <h1>3D Printed to Perfection</h1>
+            <p id="tagline" class="hero-tagline">Precision In Every Layer</p>
+            <p class="hero-body">
+              Custom-made clickers, fidgets, and toys with an easier way to browse, pick colors, and place orders.
+            </p>
+            <div class="hero-actions">
+              <a class="button-link button-link--primary" href="#collections">Shop Collection</a>
+              <a class="button-link button-link--secondary" href="#about">Learn More</a>
+            </div>
+            <div class="mini-stats">
+              <div>
+                <strong>Handmade</strong>
+                <span>Designed and printed locally</span>
+              </div>
+              <div>
+                <strong>Fast turnaround</strong>
+                <span>Built for simple ordering</span>
+              </div>
+              <div>
+                <strong>Custom colors</strong>
+                <span>Multiple filament options</span>
+              </div>
+            </div>
+          </div>
+
+          <aside class="hero-showcase hero-panel">
+            <div class="hero-logo-stage">
+              <img
+                class="hero-logo-main"
+                src="./items/apple-touch-icon-navy-1024.png"
+                alt=""
+                onerror="this.style.display='none'"
+              />
+            </div>
+            <div class="showcase-copy">
+              <p class="section-kicker">WHY PEOPLE BUY</p>
+              <ul class="benefit-list">
+                <li>Original printed designs</li>
+                <li>Easy add-to-cart flow</li>
+                <li>Made for gifts, desk toys, and everyday fun</li>
+              </ul>
+            </div>
+          </aside>
+        </section>
+
+        <section class="trust-strip">
+          <div class="trust-card">
+            <p class="section-kicker">TRUEFORM STANDARD</p>
+            <h3>Precision In Every Layer</h3>
+          </div>
+          <div class="trust-points">
+            <span>Premium product cards</span>
+            <span>Clear pricing</span>
+            <span>Faster checkout flow</span>
+            <span>Modern mobile-friendly design</span>
+          </div>
+        </section>
+
+        <section id="featured" class="featured-section">
+          <div class="section-head section-head--split">
+            <div>
+              <p class="section-kicker">FEATURED</p>
+              <h2>Popular picks</h2>
+            </div>
+          </div>
+          <div id="featured-items" class="grid grid-featured"></div>
+        </section>
+
+        <section id="about" class="about-box">
+          <div>
+            <p class="section-kicker">ABOUT TRUEFORM 3D</p>
+            <h2>About Trueform 3D</h2>
+          </div>
+          <p>
+            Hello! I am a 6th grade student wanting to become a young entrepreneur. I have made this website to start on
+            my journey. All of the information that you will need is down below. If you have any questions or concerns
+            when ordering, feel free to put it in the notes section and I will check it out. We try our best to give
+            you the best online shopping experience.
+          </p>
+        </section>
+
+        <section id="collections">
+          <div class="section-head section-head--split">
+            <div>
+              <p class="section-kicker">SHOP BY CATEGORY</p>
+              <h2>Clickers</h2>
+            </div>
+          </div>
+          <div id="clicker-items" class="grid"></div>
+        </section>
+
+        <section class="collection-section-alt">
+          <div class="section-head section-head--split">
+            <div>
+              <p class="section-kicker">SHOP BY CATEGORY</p>
+              <h2>Fidgets &amp; Toys</h2>
+            </div>
+          </div>
+          <div id="fidget-items" class="grid"></div>
+        </section>
+      </main>
+    </div>
+
+    <div id="cart-overlay" class="overlay" hidden></div>
+    <section id="cart-dialog" class="side-panel" aria-label="Your cart" hidden>
+      <form id="cart-form">
+        <div id="cart-entry-view">
+          <h2>Your cart</h2>
+          <p id="cart-dialog-description">Add items from the catalog, then check out together.</p>
+          <div id="cart-items" class="cart-items"></div>
+          <div id="cart-empty-state" class="cart-empty-state">Your cart is empty.</div>
+          <p id="cart-summary" class="cart-summary">Your cart is empty.</p>
+          <div class="cart-total-row">
+            <strong>Total</strong>
+            <span id="cart-total">$0.00</span>
+          </div>
+
+          <label>Name<input id="cart-customer-name" maxlength="80" required /></label>
+          <label>Email<input id="cart-customer-email" type="email" maxlength="120" required /></label>
+          <label>Phone<input id="cart-customer-phone" maxlength="30" /></label>
+          <label>Address<textarea id="cart-customer-address" rows="3" maxlength="240" required></textarea></label>
+          <label>Notes<textarea id="cart-notes" rows="4" maxlength="500"></textarea></label>
+
+          <div class="actions">
+            <button type="button" id="close-cart-button" class="secondary">Continue Shopping</button>
+            <button type="submit" id="checkout-button">Checkout</button>
+          </div>
+        </div>
+
+        <div id="cart-success-view" class="success-view" hidden>
+          <div class="success-icon">✓</div>
+          <h2>Cart order saved</h2>
+          <p id="cart-success-message"></p>
+          <div class="success-summary" id="cart-success-summary"></div>
+          <div class="actions centered">
+            <button type="button" id="cart-done-button">Done</button>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <dialog id="order-dialog">
+      <form id="order-form" method="dialog">
+        <div id="order-entry-view">
+          <h2 id="dialog-title">Order Item</h2>
+          <p id="dialog-description"></p>
+          <input type="hidden" id="item-id" />
+          <input type="hidden" id="form-loaded-at" />
+
+          <label id="customer-name-label">Name<input id="customer-name" maxlength="80" required /></label>
+          <label id="customer-email-label">Email<input id="customer-email" type="email" maxlength="120" required /></label>
+          <label id="customer-phone-label">Phone<input id="customer-phone" maxlength="30" /></label>
+          <label id="customer-address-label">Address<textarea id="customer-address" rows="3" maxlength="240" required></textarea></label>
+          <label>Quantity<input id="quantity" type="number" min="1" value="1" required /></label>
+
+          <fieldset class="color-picker">
+            <legend>Color</legend>
+            <div class="color-choice-row">
+              <label class="color-choice"><input type="radio" name="color" value="Black" checked /><span class="color-dot swatch-black"></span><span class="color-choice-label">Black</span></label>
+              <label class="color-choice"><input type="radio" name="color" value="White" /><span class="color-dot swatch-white"></span><span class="color-choice-label">White</span></label>
+              <label class="color-choice"><input type="radio" name="color" value="Green" /><span class="color-dot swatch-green"></span><span class="color-choice-label">Green</span></label>
+              <label class="color-choice"><input type="radio" name="color" value="Orange" /><span class="color-dot swatch-orange"></span><span class="color-choice-label">Orange</span></label>
+            </div>
+          </fieldset>
+
+          <fieldset class="color-picker" id="second-color-group" hidden>
+            <legend>Second Color</legend>
+            <div class="color-choice-row">
+              <label class="color-choice"><input type="radio" name="second-color" value="Black" checked /><span class="color-dot swatch-black"></span><span class="color-choice-label">Black</span></label>
+              <label class="color-choice"><input type="radio" name="second-color" value="White" /><span class="color-dot swatch-white"></span><span class="color-choice-label">White</span></label>
+              <label class="color-choice"><input type="radio" name="second-color" value="Green" /><span class="color-dot swatch-green"></span><span class="color-choice-label">Green</span></label>
+              <label class="color-choice"><input type="radio" name="second-color" value="Orange" /><span class="color-dot swatch-orange"></span><span class="color-choice-label">Orange</span></label>
+            </div>
+          </fieldset>
+
+          <input id="website" name="website" type="text" tabindex="-1" autocomplete="off" class="hp-field" aria-hidden="true" />
+          <label id="notes-label">Notes<textarea id="notes" rows="4" maxlength="500"></textarea></label>
+
+          <div class="actions">
+            <button type="button" id="cancel-button" class="secondary">Cancel</button>
+            <button type="submit" id="order-submit-button">Order Now</button>
+          </div>
+        </div>
+
+        <div id="order-success-view" class="success-view" hidden>
+          <div class="success-icon">✓</div>
+          <h2>Order request prepared</h2>
+          <p id="success-message"></p>
+          <div class="success-summary" id="success-summary"></div>
+          <div class="actions centered">
+            <button type="button" id="done-button">Done</button>
+          </div>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="./app.js?v=20260430-2156"></script>
+  </body>
+</html>

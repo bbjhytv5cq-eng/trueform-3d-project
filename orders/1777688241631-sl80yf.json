@@ -1,0 +1,32 @@
+{
+  "orderId": "1777688241631-sl80yf",
+  "savedAt": "2026-05-02T02:17:21.631Z",
+  "source": "local-recovered-app",
+  "cart": [
+    {
+      "itemId": "0909",
+      "name": "Tic Tac Gun (not dangerous)",
+      "quantity": 2,
+      "price": 15,
+      "color": "Black",
+      "secondColor": "Black",
+      "lineTotal": 30
+    },
+    {
+      "itemId": "0911",
+      "name": "Flexible Dragon",
+      "quantity": 3,
+      "price": 12,
+      "color": "White",
+      "secondColor": "Green",
+      "lineTotal": 36
+    }
+  ],
+  "customerName": "jacob gady",
+  "customerEmail": "jacobgady@gmail.com",
+  "phone": "67",
+  "address": "81 pilgrim road",
+  "notes": "",
+  "total": 66,
+  "kind": "cart-checkout"
+}

@@ -1,0 +1,12 @@
+{
+  "name": "trueform3d-recovered",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Recovered local copy of the Trueform 3D app with a simple local order-saving backend.",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "nodemailer": "^6.9.15"
+  }
+}
