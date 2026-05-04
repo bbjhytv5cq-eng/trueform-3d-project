@@ -12,6 +12,11 @@ const successMessage = document.getElementById('success-message');
 const successSummary = document.getElementById('success-summary');
 const secondColorGroup = document.getElementById('second-color-group');
 const orderSubmitButton = document.getElementById('order-submit-button');
+const customOrderDialog = document.getElementById('custom-order-dialog');
+const customOrderForm = document.getElementById('custom-order-form');
+const customOrderEntryView = document.getElementById('custom-order-entry-view');
+const customOrderSuccessView = document.getElementById('custom-order-success-view');
+const customOrderSuccessMessage = document.getElementById('custom-order-success-message');
 const orderOnlyFieldIds = [
   'customer-name-label',
   'customer-email-label',
@@ -42,6 +47,9 @@ let orderMode = 'order';
 document.getElementById('cancel-button').addEventListener('click', () => dialog.close());
 document.getElementById('done-button').addEventListener('click', () => dialog.close());
 document.getElementById('open-cart-button').addEventListener('click', openCart);
+document.getElementById('open-custom-order-button')?.addEventListener('click', openCustomOrder);
+document.getElementById('cancel-custom-order-button')?.addEventListener('click', () => customOrderDialog.close());
+document.getElementById('done-custom-order-button')?.addEventListener('click', () => customOrderDialog.close());
 document.getElementById('close-cart-button').addEventListener('click', closeCart);
 document.getElementById('cart-done-button').addEventListener('click', closeCart);
 cartOverlay?.addEventListener('click', closeCart);
@@ -116,6 +124,8 @@ function createItemCard(item) {
           <span class="swatch swatch-white" title="White"></span>
           <span class="swatch swatch-green" title="Green"></span>
           <span class="swatch swatch-orange" title="Orange"></span>
+          <span class="swatch swatch-red" title="Red"></span>
+          <span class="swatch-more" title="More colors available">+7 more</span>
         </div>
       </div>
     `;
@@ -290,6 +300,14 @@ function closeCart() {
 window.__openCart = openCart;
 window.__closeCart = closeCart;
 
+function openCustomOrder() {
+  customOrderEntryView.hidden = false;
+  customOrderSuccessView.hidden = true;
+  customOrderSuccessMessage.textContent = 'Thank you for submitting your request! We look forward to working with you on this project! We will email you shortly to finalize your request!';
+  customOrderForm.reset();
+  customOrderDialog.showModal();
+}
+
 function openOrder(item, mode = 'order') {
   orderMode = mode;
   title.textContent = `${mode === 'cart' ? 'Add' : 'Order'} ${item.name}`;
@@ -460,7 +478,7 @@ cartForm.addEventListener('submit', async (event) => {
 
     const emailStatus = result.email?.enabled
       ? (result.email?.adminSent
-        ? 'Order notification email sent to tylercgady@gmail.com.'
+        ? 'Order notification email sent successfully.'
         : 'Order saved, but notification email did not send.')
       : 'Order saved locally. Email sending is not configured yet.';
 
@@ -481,6 +499,45 @@ cartForm.addEventListener('submit', async (event) => {
   } catch (error) {
     console.error('Cart checkout failed:', error);
     alert('Checkout failed. Please try again.');
+  }
+});
+
+customOrderForm?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+
+  const payload = {
+    kind: 'custom-order',
+    customerName: document.getElementById('custom-customer-name').value,
+    customerEmail: document.getElementById('custom-customer-email').value,
+    phone: document.getElementById('custom-customer-phone').value,
+    contactPreference: document.getElementById('custom-contact-preference').value,
+    size: document.getElementById('custom-size').value,
+    quantity: document.getElementById('custom-quantity').value,
+    budget: document.getElementById('custom-budget').value,
+    description: document.getElementById('custom-request-description').value,
+    address: 'Custom order inquiry'
+  };
+
+  try {
+    const response = await fetch('/api/order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const result = await response.json();
+    if (!response.ok) {
+      alert(result.error || 'Something went wrong.');
+      return;
+    }
+
+    customOrderSuccessMessage.textContent = 'Thank you for submitting your request! We look forward to working with you on this project! We will email you shortly to finalize your request!';
+    customOrderEntryView.hidden = true;
+    customOrderSuccessView.hidden = false;
+    customOrderForm.reset();
+  } catch (error) {
+    console.error('Custom order failed:', error);
+    alert('Custom order request failed. Please try again.');
   }
 });
 

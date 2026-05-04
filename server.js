@@ -1,296 +1,278 @@
-const http = require('http');
-const fs = require('fs');
-const path = require('path');
-const { URL } = require('url');
-const nodemailer = require('nodemailer');
+import express from 'express';
+import rateLimit from 'express-rate-limit';
+import fs from 'fs';
+import path from 'path';
+import { Resend } from 'resend';
+import { fileURLToPath } from 'url';
 
-const root = __dirname;
-const ordersDir = path.join(root, 'orders');
-const catalogPath = path.join(root, 'catalog.json');
-const envPath = path.join(root, '.env');
-const port = Number(process.env.PORT || 8000);
-const host = process.env.HOST || '0.0.0.0';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const app = express();
+const port = process.env.PORT || 3000;
 
-loadEnvFile(envPath);
-fs.mkdirSync(ordersDir, { recursive: true });
-
-const mimeTypes = {
-  '.html': 'text/html; charset=utf-8',
-  '.js': 'application/javascript; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
-  '.json': 'application/json; charset=utf-8',
-  '.svg': 'image/svg+xml',
-  '.jpeg': 'image/jpeg',
-  '.jpg': 'image/jpeg',
-  '.png': 'image/png',
-  '.webp': 'image/webp',
-  '.gif': 'image/gif',
-  '.mov': 'video/quicktime',
-  '.mp4': 'video/mp4',
-  '.txt': 'text/plain; charset=utf-8'
-};
-
-http.createServer(async (req, res) => {
-  const url = new URL(req.url, `http://${req.headers.host}`);
-
-  if (req.method === 'GET' && url.pathname === '/api/catalog') {
-    return sendFile(res, catalogPath);
-  }
-
-  if (req.method === 'POST' && url.pathname === '/api/order') {
-    try {
-      const body = await readJsonBody(req);
-      const validation = validateOrder(body);
-      if (!validation.ok) {
-        return sendJson(res, 400, { error: validation.error });
-      }
-
-      const timestamp = new Date().toISOString();
-      const orderId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-      const record = {
-        orderId,
-        savedAt: timestamp,
-        source: 'local-recovered-app',
-        ...body
-      };
-
-      fs.writeFileSync(path.join(ordersDir, `${orderId}.json`), JSON.stringify(record, null, 2));
-
-      let emailResult;
-      try {
-        emailResult = await sendOrderEmails(record);
-      } catch (emailError) {
-        console.error('Order email failed:', emailError);
-        emailResult = {
-          enabled: true,
-          adminSent: false,
-          customerSent: false,
-          customerConfirmationEnabled: false,
-          error: emailError?.message || 'Email sending failed.'
-        };
-      }
-
-      return sendJson(res, 200, {
-        ok: true,
-        orderId,
-        message: 'Order saved locally.',
-        savedTo: `orders/${orderId}.json`,
-        email: emailResult
-      });
-    } catch (error) {
-      console.error('Order save failed:', error);
-      return sendJson(res, 500, { error: 'Failed to save order locally.' });
-    }
-  }
-
-  if (req.method === 'GET' && url.pathname === '/api/orders') {
-    const files = fs.readdirSync(ordersDir).filter((name) => name.endsWith('.json')).sort().reverse();
-    const orders = files.map((file) => JSON.parse(fs.readFileSync(path.join(ordersDir, file), 'utf8')));
-    return sendJson(res, 200, { count: orders.length, orders });
-  }
-
-  if (req.method !== 'GET' && req.method !== 'HEAD') {
-    return sendJson(res, 405, { error: 'Method not allowed.' });
-  }
-
-  const requestedPath = url.pathname === '/' ? '/index.html' : url.pathname;
-  const filePath = path.join(root, requestedPath.replace(/^\/+/, ''));
-
-  if (!filePath.startsWith(root)) {
-    return sendJson(res, 403, { error: 'Forbidden.' });
-  }
-
-  if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
-    return sendFile(res, filePath, req.method === 'HEAD');
-  }
-
-  return sendJson(res, 404, { error: 'Not found.' });
-}).listen(port, host, () => {
-  console.log(`Trueform 3D recovered app running on ${host}:${port}`);
-});
-
-function sendFile(res, filePath, headOnly = false) {
-  const ext = path.extname(filePath).toLowerCase();
-  res.writeHead(200, {
-    'Content-Type': mimeTypes[ext] || 'application/octet-stream',
-    'Cache-Control': 'no-store'
-  });
-  if (headOnly) {
-    return res.end();
-  }
-  fs.createReadStream(filePath).pipe(res);
-}
-
-function sendJson(res, statusCode, payload) {
-  res.writeHead(statusCode, {
-    'Content-Type': 'application/json; charset=utf-8',
-    'Cache-Control': 'no-store'
-  });
-  res.end(JSON.stringify(payload, null, 2));
-}
-
-function readJsonBody(req) {
-  return new Promise((resolve, reject) => {
-    let data = '';
-    req.on('data', (chunk) => {
-      data += chunk;
-      if (data.length > 1_000_000) {
-        reject(new Error('Body too large'));
-        req.destroy();
-      }
-    });
-    req.on('end', () => {
-      try {
-        resolve(data ? JSON.parse(data) : {});
-      } catch (error) {
-        reject(error);
-      }
-    });
-    req.on('error', reject);
-  });
-}
-
-function validateOrder(body) {
-  if (!body || typeof body !== 'object') return { ok: false, error: 'Invalid payload.' };
-
-  const customerName = String(body.customerName || body.name || '').trim();
-  const customerEmail = String(body.customerEmail || body.email || '').trim();
-  const address = String(body.address || body.customerAddress || '').trim();
-
-  if (!customerName) return { ok: false, error: 'Customer name is required.' };
-  if (!customerEmail) return { ok: false, error: 'Customer email is required.' };
-  if (!address) return { ok: false, error: 'Address is required.' };
-
-  if (Array.isArray(body.cart)) {
-    if (body.cart.length === 0) return { ok: false, error: 'Cart is empty.' };
-    for (const entry of body.cart) {
-      if (!String(entry.itemId || '').trim()) return { ok: false, error: 'Each cart item needs an item id.' };
-      const quantity = Number(entry.quantity);
-      if (!Number.isFinite(quantity) || quantity < 1) {
-        return { ok: false, error: 'Each cart item quantity must be at least 1.' };
-      }
-    }
-    return { ok: true };
-  }
-
-  if (!String(body.itemId || '').trim()) return { ok: false, error: 'Item is required.' };
-  const quantity = Number(body.quantity);
-  if (!Number.isFinite(quantity) || quantity < 1) return { ok: false, error: 'Quantity must be at least 1.' };
-  return { ok: true };
-}
-
-async function sendOrderEmails(order) {
-  const transporter = createMailer();
-  if (!transporter) {
-    return {
-      enabled: false,
-      reason: 'SMTP not configured'
-    };
-  }
-
-  const adminTo = process.env.ORDER_NOTIFY_TO || 'tylercgady@gmail.com';
-  const from = process.env.MAIL_FROM || process.env.SMTP_USER;
-  const customerEmail = String(order.customerEmail || order.email || '').trim();
-  const customerName = String(order.customerName || order.name || 'Customer').trim();
-
-  const summaryText = formatOrderSummaryText(order);
-  const adminSubject = Array.isArray(order.cart)
-    ? `New Trueform 3D cart order #${order.orderId}`
-    : `New Trueform 3D order #${order.orderId}`;
-  const customerSubject = `Your Trueform 3D order confirmation (#${order.orderId})`;
-
-  const result = {
-    enabled: true,
-    adminSent: false,
-    customerSent: false,
-    customerConfirmationEnabled: false
-  };
-
-  await transporter.sendMail({
-    from,
-    to: adminTo,
-    replyTo: customerEmail || undefined,
-    subject: adminSubject,
-    text: `A new Trueform 3D order was submitted.\n\n${summaryText}`
-  });
-  result.adminSent = true;
-
-  return result;
-}
-
-function createMailer() {
-  const host = process.env.SMTP_HOST;
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-
-  if (!host || !user || !pass) {
-    return null;
-  }
-
-  return nodemailer.createTransport({
-    host,
-    port: Number(process.env.SMTP_PORT || 587),
-    secure: String(process.env.SMTP_SECURE || 'false') === 'true',
-    auth: { user, pass },
-    connectionTimeout: 5000,
-    greetingTimeout: 5000,
-    socketTimeout: 5000
-  });
-}
-
-function formatOrderSummaryText(order) {
-  const lines = [
-    `Order ID: ${order.orderId}`,
-    `Saved At: ${order.savedAt}`,
-    `Customer Name: ${order.customerName || order.name || ''}`,
-    `Customer Email: ${order.customerEmail || order.email || ''}`,
-    `Phone: ${order.phone || ''}`,
-    `Address: ${order.address || order.customerAddress || ''}`,
-    `Notes: ${order.notes || ''}`
-  ];
-
-  if (Array.isArray(order.cart)) {
-    lines.push('', 'Items:');
-    for (const entry of order.cart) {
-      const options = [entry.color, entry.secondColor].filter(Boolean).join(' / ');
-      lines.push(
-        `- ${entry.name || entry.itemId} (Item #${entry.itemId}) x ${entry.quantity} @ $${Number(entry.price || 0).toFixed(2)}${options ? ` | ${options}` : ''}`
-      );
-    }
-    lines.push(``, `Cart Total: $${Number(order.total || 0).toFixed(2)}`);
-  } else {
-    const options = [order.color, order.secondColor].filter(Boolean).join(' / ');
-    lines.push(
-      '',
-      `Item: ${order.itemId}`,
-      `Quantity: ${order.quantity}`,
-      `Colors: ${options || 'N/A'}`
-    );
-  }
-
-  return lines.join('\n');
-}
-
-function loadEnvFile(filePath) {
-  if (!fs.existsSync(filePath)) return;
-
-  const raw = fs.readFileSync(filePath, 'utf8');
+function loadEnv() {
+  const envPath = path.join(__dirname, '.env');
+  if (!fs.existsSync(envPath)) return;
+  const raw = fs.readFileSync(envPath, 'utf8');
   for (const line of raw.split(/\r?\n/)) {
     const trimmed = line.trim();
     if (!trimmed || trimmed.startsWith('#')) continue;
-
-    const eqIndex = trimmed.indexOf('=');
-    if (eqIndex === -1) continue;
-
-    const key = trimmed.slice(0, eqIndex).trim();
-    let value = trimmed.slice(eqIndex + 1).trim();
-
-    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
-      value = value.slice(1, -1);
-    }
-
-    if (!(key in process.env)) {
-      process.env[key] = value;
-    }
+    const eq = trimmed.indexOf('=');
+    if (eq === -1) continue;
+    const key = trimmed.slice(0, eq).trim();
+    const value = trimmed.slice(eq + 1).trim();
+    if (!(key in process.env)) process.env[key] = value;
   }
 }
+
+loadEnv();
+
+const catalog = JSON.parse(fs.readFileSync(path.join(__dirname, 'catalog.json'), 'utf8'));
+
+const orderLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many order attempts right now. Please try again a little later.' }
+});
+
+app.use(express.json({ limit: '100kb' }));
+app.use(express.static(path.join(__dirname)));
+
+app.get('/api/catalog', (_req, res) => {
+  res.json(catalog);
+});
+
+app.post('/api/order', orderLimiter, async (req, res) => {
+  try {
+    const body = req.body || {};
+    const {
+      itemId,
+      customerName,
+      customerEmail,
+      phone,
+      address,
+      quantity,
+      color,
+      secondColor,
+      website,
+      formLoadedAt,
+      notes,
+      cart,
+      kind,
+      contactPreference,
+      size,
+      budget,
+      description
+    } = body;
+
+    if (website) {
+      return res.status(400).json({ error: 'Spam check triggered.' });
+    }
+
+    const safeName = String(customerName || '').trim();
+    const safeEmail = String(customerEmail || '').trim().toLowerCase();
+    const safePhone = String(phone || '').trim();
+    const safeAddress = String(address || '').trim();
+    const safeColor = String(color || '').trim();
+    const safeSecondColor = String(secondColor || '').trim();
+    const safeNotes = String(notes || '').trim();
+    const safeContactPreference = String(contactPreference || '').trim();
+    const safeSize = String(size || '').trim();
+    const safeBudget = String(budget || '').trim();
+    const safeDescription = String(description || '').trim();
+    const quantityNumber = Number(quantity);
+    const loadedAtMs = Number(formLoadedAt);
+
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!safeName || !safeEmail) {
+      return res.status(400).json({ error: 'Name and email are required.' });
+    }
+    if (!emailPattern.test(safeEmail)) {
+      return res.status(400).json({ error: 'Please enter a valid email address.' });
+    }
+
+    const to = process.env.ORDER_TO_EMAIL || catalog.contact?.email;
+    const from = process.env.RESEND_FROM_EMAIL;
+    const resendApiKey = process.env.RESEND_API_KEY;
+
+    if (!from || !resendApiKey) {
+      return res.status(500).json({ error: 'Email is not configured yet. Add Resend settings to .env first.' });
+    }
+
+    const resend = new Resend(resendApiKey);
+
+    if (kind === 'custom-order') {
+      if (!safeDescription) {
+        return res.status(400).json({ error: 'Please describe what you want.' });
+      }
+
+      const subject = `New custom order request from ${safeName}`;
+      const adminText = [
+        'A customer submitted a custom order request.',
+        '',
+        `Customer name: ${safeName}`,
+        `Customer email: ${safeEmail}`,
+        `Phone: ${safePhone || 'Not provided'}`,
+        `Contact preference: ${safeContactPreference || 'Not provided'}`,
+        `Preferred size: ${safeSize || 'Not provided'}`,
+        `Quantity needed: ${quantity || 'Not provided'}`,
+        `Budget range: ${safeBudget || 'Not provided'}`,
+        '',
+        'Description:',
+        safeDescription
+      ].join('\n');
+
+      const resendResult = await resend.emails.send({ from, to, replyTo: safeEmail, subject, text: adminText });
+      if (resendResult?.error || !resendResult?.data?.id) {
+        return res.status(500).json({ error: resendResult?.error?.message || 'Unable to send custom order email.' });
+      }
+
+      const customerResult = await resend.emails.send({
+        from,
+        to: safeEmail,
+        replyTo: to,
+        subject: 'We received your Trueform 3D custom order request',
+        text: `Hi ${safeName},\n\nThank you for submitting your request! We look forward to working with you on this project! We will email you shortly to finalize your request!\n\nWe received the following details:\n- Preferred size: ${safeSize || 'Not provided'}\n- Quantity needed: ${quantity || 'Not provided'}\n- Budget range: ${safeBudget || 'Not provided'}\n- Contact preference: ${safeContactPreference || 'Not provided'}\n\nDescription:\n${safeDescription}\n\n— Trueform 3D`
+      });
+
+      return res.json({ ok: true, message: 'Custom order email accepted for delivery.', emailId: resendResult.data.id, confirmationEmailId: customerResult?.data?.id || null });
+    }
+
+    if (Array.isArray(cart)) {
+      if (!safeAddress) {
+        return res.status(400).json({ error: 'Address is required.' });
+      }
+      if (!cart.length) {
+        return res.status(400).json({ error: 'Cart is empty.' });
+      }
+
+      const cartSummary = cart.map((entry) => {
+        const options = [entry.color, entry.secondColor].filter(Boolean).join(' / ');
+        return `- ${entry.name || entry.itemId} (Item #${entry.itemId}) x ${entry.quantity}${options ? ` | ${options}` : ''} @ $${Number(entry.price || 0).toFixed(2)}`;
+      }).join('\n');
+
+      const total = Number(body.total || 0);
+      const subject = `New cart order from ${safeName}`;
+      const adminText = [
+        'A customer submitted a cart order.',
+        '',
+        `Customer name: ${safeName}`,
+        `Customer email: ${safeEmail}`,
+        `Phone: ${safePhone || 'Not provided'}`,
+        `Address: ${safeAddress}`,
+        `Notes: ${safeNotes || 'None'}`,
+        '',
+        'Items:',
+        cartSummary,
+        '',
+        `Cart total: $${total.toFixed(2)}`
+      ].join('\n');
+
+      const resendResult = await resend.emails.send({ from, to, replyTo: safeEmail, subject, text: adminText });
+      if (resendResult?.error || !resendResult?.data?.id) {
+        return res.status(500).json({ error: resendResult?.error?.message || 'Unable to send cart order email.' });
+      }
+
+      const customerResult = await resend.emails.send({
+        from,
+        to: safeEmail,
+        replyTo: to,
+        subject: 'We received your Trueform 3D cart order',
+        text: `Hi ${safeName},\n\nThanks for your order from Trueform 3D. We received it successfully.\n\nItems:\n${cartSummary}\n\nTotal: $${total.toFixed(2)}\n\nShipping / delivery address: ${safeAddress}\n\n— Trueform 3D`
+      });
+
+      return res.json({ ok: true, message: 'Cart order email accepted for delivery.', emailId: resendResult.data.id, confirmationEmailId: customerResult?.data?.id || null, email: { enabled: true, adminSent: true, customerSent: !!customerResult?.data?.id } });
+    }
+
+    const item = catalog.items.find((entry) => entry.id === itemId);
+    if (!item) {
+      return res.status(404).json({ error: 'Item not found.' });
+    }
+
+    const allowedColors = new Set(['Black', 'White', 'Green', 'Orange', 'Yellow', 'Red', 'Hot Pink', 'Cobalt Blue', 'Translucent Blue', 'South Beach', 'Nebulae', 'Rosewood']);
+    const noColorItems = new Set(['1017']);
+
+    if (!safeAddress) {
+      return res.status(400).json({ error: 'Address is required.' });
+    }
+    if (!Number.isFinite(loadedAtMs)) {
+      return res.status(400).json({ error: 'Form session invalid. Please reopen the order form and try again.' });
+    }
+    const elapsedMs = Date.now() - loadedAtMs;
+    if (elapsedMs < 1500) {
+      return res.status(400).json({ error: 'Submission was too fast. Please review your order and try again.' });
+    }
+    if (elapsedMs > 1000 * 60 * 60) {
+      return res.status(400).json({ error: 'This order form expired. Please reopen it and try again.' });
+    }
+    if (!Number.isInteger(quantityNumber) || quantityNumber < 1 || quantityNumber > 25) {
+      return res.status(400).json({ error: 'Quantity must be a whole number between 1 and 25.' });
+    }
+    if (!noColorItems.has(item.id) && !allowedColors.has(safeColor)) {
+      return res.status(400).json({ error: 'Please choose a valid color option.' });
+    }
+    if (['0909', '0911'].includes(item.id) && !allowedColors.has(safeSecondColor)) {
+      return res.status(400).json({ error: 'Please choose a valid second color option.' });
+    }
+
+    const unitPrice = typeof item.price === 'number' ? item.price : null;
+    const total = unitPrice !== null ? unitPrice * quantityNumber : null;
+    const subject = `New order request: ${item.name} (${item.id})`;
+    const adminText = [
+      'A customer submitted an order request.',
+      '',
+      `Item: ${item.name}`,
+      `Item ID: ${item.id}`,
+      `Price: ${unitPrice !== null ? `$${unitPrice.toFixed(2)} each` : 'Not set'}`,
+      `Quantity: ${quantityNumber}`,
+      `${noColorItems.has(item.id) ? '' : `Color: ${safeColor || 'Not selected'}`}`,
+      `${['0909', '0911'].includes(item.id) ? `Second color: ${safeSecondColor || 'Not selected'}` : ''}`,
+      `Total: ${total !== null ? `$${total.toFixed(2)}` : 'Not set'}`,
+      `Customer name: ${safeName}`,
+      `Customer email: ${safeEmail}`,
+      `Phone: ${safePhone || 'Not provided'}`,
+      `Address: ${safeAddress}`,
+      `Notes: ${safeNotes || 'None'}`
+    ].filter(Boolean).join('\n');
+
+    const resendResult = await resend.emails.send({ from, to, replyTo: safeEmail, subject, text: adminText });
+    if (resendResult?.error || !resendResult?.data?.id) {
+      return res.status(500).json({ error: resendResult?.error?.message || 'Unable to send order email.' });
+    }
+
+    const customerText = [
+      `Hi ${safeName},`,
+      '',
+      'Thanks for your order request with Trueform 3D. We received it successfully and will follow up soon.',
+      '',
+      'Order summary',
+      `- Item: ${item.name}`,
+      `- Item ID: ${item.id}`,
+      `- Quantity: ${quantityNumber}`,
+      `${noColorItems.has(item.id) ? '' : `- Color: ${safeColor}`}`,
+      `${['0909', '0911'].includes(item.id) ? `- Second color: ${safeSecondColor}` : ''}`,
+      `- Total: ${total !== null ? `$${total.toFixed(2)}` : 'Pending'}`,
+      '',
+      `Shipping / delivery address: ${safeAddress}`,
+      '',
+      'If you included any notes or customization details, we have those too.',
+      '',
+      'Thank you for supporting Trueform 3D.',
+      '',
+      '— Trueform 3D'
+    ].filter(Boolean).join('\n');
+
+    const customerResult = await resend.emails.send({ from, to: safeEmail, replyTo: to, subject: 'We received your Trueform 3D order request', text: customerText });
+
+    res.json({ ok: true, message: 'Order email accepted for delivery.', emailId: resendResult.data.id, confirmationEmailId: customerResult?.data?.id || null, email: { enabled: true, adminSent: true, customerSent: !!customerResult?.data?.id } });
+  } catch (error) {
+    console.error('Order processing failed:', error?.message || error);
+    res.status(500).json({ error: 'Unable to process the order right now. Please try again shortly.' });
+  }
+});
+
+app.listen(port, () => {
+  console.log(`Tyler brochure app running at http://localhost:${port}`);
+});

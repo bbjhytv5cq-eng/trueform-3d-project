@@ -95,6 +95,17 @@
           </div>
         </section>
 
+        <section class="custom-order-callout">
+          <div>
+            <p class="section-kicker">CUSTOM PROJECTS</p>
+            <h2>Need something not listed?</h2>
+            <p class="section-subtitle">Send a custom order request with a description of what you want, and we’ll follow up by email to finalize the details.</p>
+          </div>
+          <div class="custom-order-callout__actions">
+            <button type="button" id="open-custom-order-button">Request a Custom Order</button>
+          </div>
+        </section>
+
         <section id="featured" class="featured-section">
           <div class="section-head section-head--split">
             <div>
@@ -178,6 +189,78 @@
       </form>
     </section>
 
+    <dialog id="custom-order-dialog">
+      <form id="custom-order-form" method="dialog">
+        <div id="custom-order-entry-view">
+          <div class="checkout-shell checkout-shell--modal">
+            <div class="checkout-header">
+              <p class="checkout-eyebrow">Custom order</p>
+              <h2>Request a Custom Order</h2>
+              <p>Tell us what you want made and we’ll email you shortly to finalize your request.</p>
+            </div>
+
+            <div class="checkout-layout checkout-layout--single">
+              <div class="checkout-main">
+                <section class="checkout-section">
+                  <div class="section-label">Your details</div>
+                  <div class="form-grid form-grid--two">
+                    <label><span>Full name</span><input id="custom-customer-name" maxlength="80" required /></label>
+                    <label><span>Email address</span><input id="custom-customer-email" type="email" maxlength="120" required /></label>
+                  </div>
+                  <div class="form-grid form-grid--two">
+                    <label><span>Phone number</span><input id="custom-customer-phone" maxlength="30" placeholder="Optional" /></label>
+                    <label><span>Best way to reach you</span><input id="custom-contact-preference" maxlength="60" placeholder="Email, phone, either" /></label>
+                  </div>
+                </section>
+
+                <section class="checkout-section">
+                  <div class="section-label">Project details</div>
+                  <div class="form-grid form-grid--three">
+                    <label><span>Preferred size</span><input id="custom-size" maxlength="80" placeholder="Example: 8 inches wide" /></label>
+                    <label><span>Quantity needed</span><input id="custom-quantity" type="number" min="1" max="100" placeholder="1" /></label>
+                    <label><span>Budget range</span><input id="custom-budget" maxlength="80" placeholder="Example: $20-$40" /></label>
+                  </div>
+                  <div class="form-grid">
+                    <label><span>Description of what you want</span><textarea id="custom-request-description" rows="8" maxlength="1500" required placeholder="Describe the item, size, colors, theme, quantity, or anything else you'd like us to know."></textarea></label>
+                  </div>
+                </section>
+              </div>
+
+              <aside class="checkout-sidebar">
+                <section class="summary-card">
+                  <div class="summary-card__head">
+                    <div>
+                      <p class="summary-kicker">Custom request</p>
+                      <h3>We’ll review it</h3>
+                    </div>
+                  </div>
+                  <p class="summary-helper">Submit your idea and we’ll follow up by email to confirm details, pricing, and next steps.</p>
+                  <ul class="checkout-points">
+                    <li>Share your idea in your own words</li>
+                    <li>We’ll review the request</li>
+                    <li>We’ll email you to finalize it</li>
+                  </ul>
+                  <div class="actions actions--stacked">
+                    <button type="submit">Submit Custom Request</button>
+                    <button type="button" id="cancel-custom-order-button" class="secondary">Cancel</button>
+                  </div>
+                </section>
+              </aside>
+            </div>
+          </div>
+        </div>
+
+        <div id="custom-order-success-view" class="success-view" hidden>
+          <div class="success-icon">✓</div>
+          <h2>Request submitted</h2>
+          <p id="custom-order-success-message">Thank you for submitting your request! We look forward to working with you on this project! We will email you shortly to finalize your request!</p>
+          <div class="actions centered">
+            <button type="button" id="done-custom-order-button">Done</button>
+          </div>
+        </div>
+      </form>
+    </dialog>
+
     <dialog id="order-dialog">
       <form id="order-form" method="dialog">
         <div id="order-entry-view">
@@ -194,21 +277,45 @@
 
           <fieldset class="color-picker">
             <legend>Color</legend>
-            <div class="color-choice-row">
+            <div class="color-group-label">Basic colors</div>
+            <div class="color-choice-row color-choice-row--grid">
               <label class="color-choice"><input type="radio" name="color" value="Black" checked /><span class="color-dot swatch-black"></span><span class="color-choice-label">Black</span></label>
               <label class="color-choice"><input type="radio" name="color" value="White" /><span class="color-dot swatch-white"></span><span class="color-choice-label">White</span></label>
               <label class="color-choice"><input type="radio" name="color" value="Green" /><span class="color-dot swatch-green"></span><span class="color-choice-label">Green</span></label>
               <label class="color-choice"><input type="radio" name="color" value="Orange" /><span class="color-dot swatch-orange"></span><span class="color-choice-label">Orange</span></label>
+              <label class="color-choice"><input type="radio" name="color" value="Yellow" /><span class="color-dot swatch-yellow"></span><span class="color-choice-label">Yellow</span></label>
+              <label class="color-choice"><input type="radio" name="color" value="Red" /><span class="color-dot swatch-red"></span><span class="color-choice-label">Red</span></label>
+              <label class="color-choice"><input type="radio" name="color" value="Hot Pink" /><span class="color-dot swatch-hot-pink"></span><span class="color-choice-label">Hot Pink</span></label>
+              <label class="color-choice"><input type="radio" name="color" value="Cobalt Blue" /><span class="color-dot swatch-cobalt-blue"></span><span class="color-choice-label">Cobalt Blue</span></label>
+            </div>
+            <div class="color-group-label">Special colors</div>
+            <div class="color-choice-row color-choice-row--grid">
+              <label class="color-choice color-choice--special"><input type="radio" name="color" value="Translucent Blue" /><span class="color-dot swatch-translucent-blue"></span><span class="color-choice-label">Translucent Blue</span></label>
+              <label class="color-choice color-choice--special"><input type="radio" name="color" value="South Beach" /><span class="color-dot swatch-south-beach"></span><span class="color-choice-label">South Beach</span></label>
+              <label class="color-choice color-choice--special"><input type="radio" name="color" value="Nebulae" /><span class="color-dot swatch-nebulae"></span><span class="color-choice-label">Nebulae</span></label>
+              <label class="color-choice color-choice--special"><input type="radio" name="color" value="Rosewood" /><span class="color-dot swatch-rosewood"></span><span class="color-choice-label">Rosewood</span></label>
             </div>
           </fieldset>
 
           <fieldset class="color-picker" id="second-color-group" hidden>
             <legend>Second Color</legend>
-            <div class="color-choice-row">
+            <div class="color-group-label">Basic colors</div>
+            <div class="color-choice-row color-choice-row--grid">
               <label class="color-choice"><input type="radio" name="second-color" value="Black" checked /><span class="color-dot swatch-black"></span><span class="color-choice-label">Black</span></label>
               <label class="color-choice"><input type="radio" name="second-color" value="White" /><span class="color-dot swatch-white"></span><span class="color-choice-label">White</span></label>
               <label class="color-choice"><input type="radio" name="second-color" value="Green" /><span class="color-dot swatch-green"></span><span class="color-choice-label">Green</span></label>
               <label class="color-choice"><input type="radio" name="second-color" value="Orange" /><span class="color-dot swatch-orange"></span><span class="color-choice-label">Orange</span></label>
+              <label class="color-choice"><input type="radio" name="second-color" value="Yellow" /><span class="color-dot swatch-yellow"></span><span class="color-choice-label">Yellow</span></label>
+              <label class="color-choice"><input type="radio" name="second-color" value="Red" /><span class="color-dot swatch-red"></span><span class="color-choice-label">Red</span></label>
+              <label class="color-choice"><input type="radio" name="second-color" value="Hot Pink" /><span class="color-dot swatch-hot-pink"></span><span class="color-choice-label">Hot Pink</span></label>
+              <label class="color-choice"><input type="radio" name="second-color" value="Cobalt Blue" /><span class="color-dot swatch-cobalt-blue"></span><span class="color-choice-label">Cobalt Blue</span></label>
+            </div>
+            <div class="color-group-label">Special colors</div>
+            <div class="color-choice-row color-choice-row--grid">
+              <label class="color-choice color-choice--special"><input type="radio" name="second-color" value="Translucent Blue" /><span class="color-dot swatch-translucent-blue"></span><span class="color-choice-label">Translucent Blue</span></label>
+              <label class="color-choice color-choice--special"><input type="radio" name="second-color" value="South Beach" /><span class="color-dot swatch-south-beach"></span><span class="color-choice-label">South Beach</span></label>
+              <label class="color-choice color-choice--special"><input type="radio" name="second-color" value="Nebulae" /><span class="color-dot swatch-nebulae"></span><span class="color-choice-label">Nebulae</span></label>
+              <label class="color-choice color-choice--special"><input type="radio" name="second-color" value="Rosewood" /><span class="color-dot swatch-rosewood"></span><span class="color-choice-label">Rosewood</span></label>
             </div>
           </fieldset>
 
